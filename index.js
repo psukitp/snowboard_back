@@ -1,17 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const userRouter = require('./routes/user.routes')
 const userController = require('./controller/user.controller')
 const eventConroller = require('./controller/event.controller')
 
 const port = 3001;
 
 const app = express();
-// app.use(express.json({
-//     type: ['application/json', 'text/plain']
-// }));
-// app.use(express.json())
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({
