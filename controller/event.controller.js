@@ -1,21 +1,25 @@
 const db = require('../db')
 
 class EventController {
-    getDateNow() {
-        const today = new Date();
-        const dd = String(today.getDate()).padStart(2, '0');
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const yyyy = today.getFullYear();
-        today = mm + '/' + dd + '/' + yyyy;
-        return today;
-    }
+
 
     async createEvent(req, res) {
-        console.log(req.body);
         const { creator_id, event_title, event_description, event_date} = req.body;
-        const newEvent = await db.query(`INSERT INTO event (creator_id, event_title, event_description, event_date) values ($1, $2, $3, $4) RETURNING *`, [creator_id, event_title, event_description, event_date])
+        const newEvent = await db.query(`INSERT INTO event (creator_id, event_title, event_description) values ($1, $2, $3) RETURNING *`, [creator_id, event_title, event_description])
+
+        const lastValue = await db.query(`SELECT lastval()`)
+        const newId = lastValue.rows[0].lastval;
+
+        const file = req.files.file;
+        const fileType = file.mimetype.slice(6)
+        const filePathToAdd = "./public/event_image/" + String(newId) + "." + fileType;
+        file.mv(filePathToAdd)
+
+        const filePathToGive = "/event_image/" + String(newId) + "." + fileType;
+
+        await db.query(`UPDATE event SET event_image_path=$1 WHERE event_id=$2`, [String(filePathToGive), newId])
         console.log('accepted')
-        res.json(newEvent.rows)
+
     }
     async getEvents(req, res) {
         const events = await db.query(`SELECT * FROM event`)
@@ -23,6 +27,7 @@ class EventController {
         res.header({
             'Access-Control-Allow-Origin': '*'
         });
+
         res.send(events.rows);
     }
     async getOneEvent(req, res) {
