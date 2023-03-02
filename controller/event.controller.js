@@ -18,12 +18,10 @@ class EventController {
         const filePathToGive = "/event_image/" + String(newId) + "." + fileType;
 
         await db.query(`UPDATE event SET event_image_path=$1 WHERE event_id=$2`, [String(filePathToGive), newId])
-        console.log('accepted')
 
     }
     async getEvents(req, res) {
         const events = await db.query(`SELECT * FROM event`)
-        console.log('sended');
         res.header({
             'Access-Control-Allow-Origin': '*'
         });

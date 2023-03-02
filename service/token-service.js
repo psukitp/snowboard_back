@@ -35,7 +35,6 @@ class TokenService {
         if (tokenData) {
             tokenData.token = refreshToken;
         }
-        console.log(refreshToken)
         const token = await db.query(`INSERT INTO token_model (user_id, token) values($1, $2)`, [userId, refreshToken])
         return token;
     }

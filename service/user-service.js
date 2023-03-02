@@ -20,7 +20,7 @@ class UserService {
         const lastValue = await db.query(`SELECT * FROM users_list WHERE user_id = (SELECT max(user_id) FROM users_list)`)
         const newId = lastValue.rows[0].user_id;
         const isActivated = lastValue.rows[0].is_activated;
-        const userDto = new UserDto(email, newId, isActivated)
+        const userDto = new UserDto(name, sname, email, newId, isActivated)
 
         const tokens = tokenService.generateTokens({ ...userDto });
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
@@ -38,7 +38,6 @@ class UserService {
             throw ApiError.BadRequest('Некорректная ссылка активации')
         }
         const updateUser = await db.query(`UPDATE users_list SET is_activated=true WHERE activation_link='${activationLink}'`)
-        console.log(updateUser);
     }
 
 
@@ -47,14 +46,13 @@ class UserService {
         if (!user) {
             throw ApiError.BadRequest('Пользователь с таким email не найден')
         }
-        const {name, s_name, user_hash_password, email, user_id, is_activated } = user.rows[0]
+        const { name, s_name, user_hash_password, email, user_id, is_activated } = user.rows[0]
         const isPassEquals = await bcrypt.compare(password, user_hash_password);
         if (!isPassEquals) {
             throw ApiError.BadRequest('Неверный пароль')
         }
         const userDto = new UserDto(name, s_name, email, user_id, is_activated);
         const tokens = tokenService.generateTokens({ ...userDto });
-
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
         return {
             ...tokens,
@@ -71,18 +69,16 @@ class UserService {
         if (!refreshToken) {
             throw ApiError.UnauthorizedError();
         }
-        console.log(tokenService.validateRefreshToken(refreshToken).id);
         const userData = tokenService.validateRefreshToken(refreshToken).id;
         const tokenFromDB = await tokenService.findToken(refreshToken);
         if (!tokenFromDB || !tokenFromDB) {
             throw ApiError.UnauthorizedError();
         }
         const user = await db.query(`SELECT * FROM users_list WHERE user_id=${userData}`)
-        const {email, user_id, is_activated} = user.rows[0];
-        const userDto = new UserDto(email, user_id, is_activated);
+        const {name, s_name, email, user_id, is_activated } = user.rows[0];
+        const userDto = new UserDto(name, s_name, email, userData, is_activated);
         const tokens = tokenService.generateTokens({ ...userDto });
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
-        console.log('Ya tut')
         return {
             ...tokens,
             user: userDto

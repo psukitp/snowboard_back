@@ -15,17 +15,14 @@ class UserController {
         //     return next(ApiError.BadRequest('Ошибка валидации', errors.array()))
         // }
         const {name, sname, email, password } = req.body;
-        console.log(req.body)
         const userData = await userService.registration(name, sname, email, password);
         res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
         return res.json(userData)
     }
 
     async login(req, res, next) {
-        console.log('Я тут')
         const { email, password } = req.body;
         const userData = await userService.login(email, password);
-        console.log(userData.user)
 
         res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
         return res.json(userData)
@@ -46,7 +43,6 @@ class UserController {
 
     async refresh(req, res, next) {
         const { refreshToken } = req.cookies;
-        console.log(refreshToken)
         const userData = await userService.refresh(refreshToken);
         res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
         res.send(userData);
