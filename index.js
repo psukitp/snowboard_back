@@ -44,5 +44,6 @@ app.get('/users', userController.getUsers)
 //events
 app.post('/new-event', eventConroller.createEvent)
 app.get('/events', eventConroller.getEvents)
+app.get('/events/:id', eventConroller.getOneEvent)
 
 app.listen(PORT, () => console.log('server started on port ' + PORT))

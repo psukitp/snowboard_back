@@ -4,7 +4,7 @@ class EventController {
 
 
     async createEvent(req, res) {
-        const { creator_id, event_title, event_description, event_date} = req.body;
+        const { creator_id, event_title, event_description, event_date } = req.body;
         const newEvent = await db.query(`INSERT INTO event (creator_id, event_title, event_description) values ($1, $2, $3) RETURNING *`, [creator_id, event_title, event_description])
 
         const lastValue = await db.query(`SELECT lastval()`)
@@ -28,8 +28,11 @@ class EventController {
 
         res.send(events.rows);
     }
-    async getOneEvent(req, res) {
 
+    async getOneEvent(req, res) {
+        const eventId = req.params.id;
+        const event = await db.query(`SELECT * FROM event WHERE event_id=${eventId}`);
+        res.send(event.rows[0]);
     }
     async updateEvent(req, res) {
 
