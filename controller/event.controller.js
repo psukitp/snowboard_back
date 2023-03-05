@@ -32,6 +32,10 @@ class EventController {
     async getOneEvent(req, res) {
         const eventId = req.params.id;
         const event = await db.query(`SELECT * FROM event WHERE event_id=${eventId}`);
+        const event_creator_id = event.rows[0].creator_id;
+        const event_creator_name = await db.query(`SELECT name, s_name FROM users_list WHERE user_id=${event_creator_id}`);
+        event.rows[0].name = event_creator_name.rows[0].name;
+        event.rows[0].s_name = event_creator_name.rows[0].s_name;
         res.send(event.rows[0]);
     }
     async updateEvent(req, res) {

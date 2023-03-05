@@ -8,7 +8,8 @@ const eventConroller = require('./controller/event.controller')
 const fileUpload = require('express-fileupload');
 const cookieParser = require('cookie-parser')
 const errorMiddleware = require('./middleware/error-middleware')
-const { body } = require('express-validator')
+const { body } = require('express-validator');
+const commentController = require('./controller/comment.controller');
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -45,5 +46,10 @@ app.get('/users', userController.getUsers)
 app.post('/new-event', eventConroller.createEvent)
 app.get('/events', eventConroller.getEvents)
 app.get('/events/:id', eventConroller.getOneEvent)
+
+
+//comments
+app.post('/create-new-comment', commentController.addCommentToEvent)
+app.get('/comments/:event_id', commentController.getComments)
 
 app.listen(PORT, () => console.log('server started on port ' + PORT))
