@@ -46,6 +46,7 @@ app.get('/users', userController.getUsers)
 app.post('/new-event', eventConroller.createEvent)
 app.get('/events', eventConroller.getEvents)
 app.get('/events/:id', eventConroller.getOneEvent)
+app.post('/events/update/:id', eventConroller.updateEvent)
 
 
 //comments
