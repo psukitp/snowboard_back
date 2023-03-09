@@ -3,6 +3,9 @@
 /.pnp
 .pnp.js
 
+.env
+db.js
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
