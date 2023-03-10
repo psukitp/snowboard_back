@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser')
 const errorMiddleware = require('./middleware/error-middleware')
 const { body } = require('express-validator');
 const commentController = require('./controller/comment.controller');
+const resalesController = require('./controller/resales.controller');
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -52,5 +53,10 @@ app.post('/events/update/:id', eventConroller.updateEvent)
 //comments
 app.post('/create-new-comment', commentController.addCommentToEvent)
 app.get('/comments/:event_id', commentController.getComments)
+
+
+
+//resales
+app.get('/resales', resalesController.getResales)
 
 app.listen(PORT, () => console.log('server started on port ' + PORT))
