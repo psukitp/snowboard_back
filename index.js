@@ -59,5 +59,6 @@ app.get('/comments/:event_id', commentController.getComments)
 //resales
 app.get('/resales', resalesController.getResales)
 app.post('/new-resale', resalesController.createResale)
+app.get('/products', resalesController.getProductTypes)
 
 app.listen(PORT, () => console.log('server started on port ' + PORT))
