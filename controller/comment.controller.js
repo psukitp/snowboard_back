@@ -10,7 +10,7 @@ class CommentController {
             const dd = String(today.getDate());
             const mm = String(today.getMonth() + 1);
             const yyyy = today.getFullYear();
-            today = mm + '/' + dd + '/' + yyyy;
+            today = dd + '.' + (mm.length < 2 ? '0'+mm : mm) + '.' + yyyy;
             const newComment = await db.query(`INSERT INTO event_comment (creator_id, comment_date, comment_text) values ($1, $2, $3)`, [creator_id, today, comment_text]);
             const lastValue = await db.query(`SELECT * FROM event_comment WHERE event_comment_id = (SELECT max(event_comment_id) FROM event_comment)`)
             const newCommentId = lastValue.rows[0].event_comment_id;
