@@ -7,8 +7,7 @@ class EventController {
         try {
             const { creator_id, event_title, event_description, event_date } = req.body;
             const newEvent = await db.query(`INSERT INTO event (creator_id, event_title, event_description, event_date) values ($1, $2, $3, $4) RETURNING *`, [creator_id, event_title, event_description, event_date])
-            console.log(event_date);
-            console.log(newEvent.rows[0].event_date);
+
 
             const lastValue = await db.query(`SELECT lastval()`)
             const newId = lastValue.rows[0].lastval;
