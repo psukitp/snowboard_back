@@ -14,13 +14,13 @@ class UserService {
         const activationLink = uuid.v4()
 
 
-        const user = await db.query(`INSERT INTO users_list (name, s_name, email, user_hash_password, activation_link) values ($1, $2, $3, $4, $5) RETURNING *`, [name, sname, email, hashPassword, activationLink])
+        const user = await db.query(`INSERT INTO users_list (name, email, user_hash_password, activation_link) values ($1, $2, $3, $4, $5) RETURNING *`, [name, email, hashPassword, activationLink])
         await mailService.senActivationMail(email, `${process.env.API_URL}/activate/${activationLink}`);
 
         const lastValue = await db.query(`SELECT * FROM users_list WHERE user_id = (SELECT max(user_id) FROM users_list)`)
         const newId = lastValue.rows[0].user_id;
         const isActivated = lastValue.rows[0].is_activated;
-        const userDto = new UserDto(name, sname, email, newId, isActivated)
+        const userDto = new UserDto(name, email, newId, isActivated)
 
         const tokens = tokenService.generateTokens({ ...userDto });
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
@@ -46,12 +46,12 @@ class UserService {
         if (!user) {
             throw ApiError.BadRequest('Пользователь с таким email не найден')
         }
-        const { name, s_name, user_hash_password, email, user_id, is_activated } = user.rows[0]
+        const { name, user_hash_password, email, user_id, is_activated } = user.rows[0]
         const isPassEquals = await bcrypt.compare(password, user_hash_password);
         if (!isPassEquals) {
             throw ApiError.BadRequest('Неверный пароль')
         }
-        const userDto = new UserDto(name, s_name, email, user_id, is_activated);
+        const userDto = new UserDto(name, email, user_id, is_activated);
         const tokens = tokenService.generateTokens({ ...userDto });
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
         return {
@@ -75,8 +75,8 @@ class UserService {
             throw ApiError.UnauthorizedError();
         }
         const user = await db.query(`SELECT * FROM users_list WHERE user_id=${userData}`)
-        const {name, s_name, email, user_id, is_activated } = user.rows[0];
-        const userDto = new UserDto(name, s_name, email, userData, is_activated);
+        const {name, email, user_id, is_activated } = user.rows[0];
+        const userDto = new UserDto(name, email, userData, is_activated);
         const tokens = tokenService.generateTokens({ ...userDto });
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
         return {
