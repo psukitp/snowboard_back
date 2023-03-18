@@ -42,6 +42,7 @@ app.get('/activate/:link', userController.activate)
 app.get('/refresh', userController.refresh)
 app.get('/users', userController.getUsers)
 app.post('/users/:id', userController.updateUser)
+app.post('/users/new-photo/:id', userController.updateUserPhoto)
 
 
 //events
@@ -61,5 +62,7 @@ app.get('/comments/:event_id', commentController.getComments)
 app.get('/resales', resalesController.getResales)
 app.post('/new-resale', resalesController.createResale)
 app.get('/products', resalesController.getProductTypes)
+app.get('/resale/:id', resalesController.getOneResale)
+app.post('/resale/update/:id', resalesController.updateResale)
 
 app.listen(PORT, () => console.log('server started on port ' + PORT))

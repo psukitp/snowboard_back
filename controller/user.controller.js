@@ -11,10 +11,10 @@ class UserController {
                 return next(ApiError.BadRequest('Ошибка валидации', errors.array()))
             }
             const { login, name, email, password } = req.body;
-            
+
             const userData = await userService.registration(login, name, email, password);
             res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
-            
+
             return res.json(userData)
         } catch (e) {
             console.log(e)
@@ -65,14 +65,25 @@ class UserController {
         }
     }
 
-    async updateUser(req, res, next){
-        try{
-            const {name, login, status} = req.body;
+    async updateUser(req, res, next) {
+        try {
+            const { name, login, status } = req.body;
             const id = req.params.id;
             const newUser = await userService.updateUser(id, name, login, status);
             res.status(newUser.code)
             res.send(newUser);
-        } catch (e){
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async updateUserPhoto(req, res, next) {
+        try {
+            const id = req.params.id;
+            const file = req.files.file;
+            const updatedUser = await userService.updateUserPhoto(id, file);
+            res.send(updatedUser);
+        } catch (e) {
             console.log(e);
         }
     }

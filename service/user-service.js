@@ -111,6 +111,28 @@ class UserService {
             return { code: e.status, message: e.message };
         }
     }
+
+    async updateUserPhoto(id, file) {
+        try {
+            let filePathToGive = '';
+            const fileType = file.mimetype.slice(6)
+            const filePathToAdd = "./public/user_image/" + String(id) + "." + fileType;
+            file.mv(filePathToAdd)
+            filePathToGive = "/user_image/" + String(id) + "." + fileType;
+
+            await db.query(`UPDATE users_list SET user_image_path=$1 WHERE user_id=$2`, [String(filePathToGive), id])
+
+            const user = await db.query(`SELECT * FROM users_list WHERE user_id=${id}`);
+
+            const { login, name, email, user_id, is_activated, user_image_path, status } = user.rows[0];
+
+            const userDto = new UserDto(login, name, email, user_id, is_activated, user_image_path, status)
+
+            return userDto;
+        } catch (e) {
+            console.log(e)
+        }
+    }
 }
 
 module.exports = new UserService();

@@ -98,10 +98,55 @@ class ResalesController {
     }
 
     async getOneResale(req, res) {
+        try {
+            const resaleId = req.params.id;
+            const resale = await db.query(`SELECT * FROM ad_post WHERE ad_post_id=${resaleId}`);
+            const resale_creator_id = resale.rows[0].creator_id;
+            const resale_creator_login = await db.query(`SELECT login FROM users_list WHERE user_id=${resale_creator_id}`);
+            resale.rows[0].login = resale_creator_login.rows[0].login;
 
+            let boardProp = await db.query(`SELECT * FROM board_property`);
+            let bindingProp = await db.query(`SELECT * FROM binding_property`);
+            let clothesProp = await db.query(`SELECT * FROM clothes_property`);
+            let shoesProp = await db.query(`SELECT * FROM shoes_property`);
+
+            for (let i = 0; i < resale.rowCount; i++) {
+                let res = boardProp.rows.find(({ ad_post_id }) => ad_post_id === resale.rows[i].ad_post_id);
+                if (res !== undefined) {
+                    Object.assign(resale.rows[i], res)
+                }
+                res = bindingProp.rows.find(({ ad_post_id }) => ad_post_id === resale.rows[i].ad_post_id);
+                if (res !== undefined) {
+                    Object.assign(resale.rows[i], res)
+                }
+                res = clothesProp.rows.find(({ ad_post_id }) => ad_post_id === resale.rows[i].ad_post_id);
+                if (res !== undefined) {
+                    Object.assign(resale.rows[i], res)
+                }
+                res = shoesProp.rows.find(({ ad_post_id }) => ad_post_id === resale.rows[i].ad_post_id);
+                if (res !== undefined) {
+                    Object.assign(resale.rows[i], res)
+                }
+            }
+            res.send(resale.rows[0]);
+        } catch (e) {
+            console.log(e);
+        }
     }
-    async updateResale(req, res) {
 
+    async updateResale(req, res) {
+        try {
+            const resaleId = req.params.id;
+            const { title, text, price, tel } = req.body;
+            await db.query(`UPDATE ad_post SET post_name='${title}', post_text='${text}', price=${price}, ad_telephone='${tel}' WHERE ad_post_id = ${resaleId}`)
+            const resale = await db.query(`SELECT * FROM ad_post WHERE ad_post_id=${resaleId}`)
+            const resale_creator_id = resale.rows[0].creator_id;
+            const resale_creator_login = await db.query(`SELECT login FROM users_list WHERE user_id=${resale_creator_id}`);
+            resale.rows[0].login = resale_creator_login.rows[0].login;
+            res.send(resale.rows[0]);
+        } catch (e) {
+            console.log(e);
+        }
     }
     async deleteResale(req, res) {
 
