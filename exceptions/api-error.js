@@ -15,4 +15,8 @@ module.exports = class ApiError extends Error {
     static BadRequest(message, errors){
         return new ApiError(400, message, errors)
     }
+
+    static LoginExist(){
+        return new ApiError(406, 'Пользователь с таким логином уже существует')
+    }
 }

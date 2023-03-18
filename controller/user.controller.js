@@ -65,6 +65,18 @@ class UserController {
         }
     }
 
+    async updateUser(req, res, next){
+        try{
+            const {name, login, status} = req.body;
+            const id = req.params.id;
+            const newUser = await userService.updateUser(id, name, login, status);
+            res.status(newUser.code)
+            res.send(newUser);
+        } catch (e){
+            console.log(e);
+        }
+    }
+
     async getUsers(req, res, next) {
 
     }

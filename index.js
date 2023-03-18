@@ -41,6 +41,7 @@ app.post('/logout', userController.logout)
 app.get('/activate/:link', userController.activate)
 app.get('/refresh', userController.refresh)
 app.get('/users', userController.getUsers)
+app.post('/users/:id', userController.updateUser)
 
 
 //events
