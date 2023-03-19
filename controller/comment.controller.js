@@ -36,6 +36,18 @@ class CommentController {
             console.log(e)
         }
     }
+
+    async getDateStatisticComment(req, res) {
+        try {
+            const events = await db.query(`SELECT comment_date, count(comment_date) as comment_count
+            FROM event_comment WHERE NOT comment_date IS NULL AND NOT comment_date = ''
+            GROUP BY comment_date`);
+            res.send(events.rows)
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
 }
 
 module.exports = new CommentController();

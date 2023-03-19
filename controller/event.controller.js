@@ -60,9 +60,9 @@ class EventController {
     async updateEvent(req, res) {
         try {
             const eventId = req.params.id;
-            const {title, description} = req.body;
+            const { title, description } = req.body;
             await db.query(`UPDATE event SET event_title='${title}', event_description='${description}' WHERE event_id = ${eventId}`)
-            const event =  await db.query(`SELECT * FROM event WHERE event_id=${eventId}`)
+            const event = await db.query(`SELECT * FROM event WHERE event_id=${eventId}`)
             const event_creator_id = event.rows[0].creator_id;
             const event_creator_name = await db.query(`SELECT name, s_name FROM users_list WHERE user_id=${event_creator_id}`);
             event.rows[0].name = event_creator_name.rows[0].name;
@@ -72,6 +72,18 @@ class EventController {
             console.log(e);
         }
     }
+
+    async getDateStatisticEvent(req, res) {
+        try {
+            const events = await db.query(`SELECT event_date, count(event_date) as event_count
+            FROM event WHERE NOT event_date IS NULL AND NOT event_date = ''
+            GROUP BY event_date`);
+            res.send(events.rows)
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
     async deleteEvent(req, res) {
 
     }

@@ -50,11 +50,13 @@ app.post('/new-event', eventConroller.createEvent)
 app.get('/events', eventConroller.getEvents)
 app.get('/events/:id', eventConroller.getOneEvent)
 app.post('/events/update/:id', eventConroller.updateEvent)
+app.get('/events-statistic', eventConroller.getDateStatisticEvent)
 
 
 //comments
 app.post('/create-new-comment', commentController.addCommentToEvent)
 app.get('/comments/:event_id', commentController.getComments)
+app.get('/comment-statistic', commentController.getDateStatisticComment)
 
 
 
