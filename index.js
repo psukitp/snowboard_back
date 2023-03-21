@@ -11,11 +11,11 @@ const errorMiddleware = require('./middleware/error-middleware')
 const { body } = require('express-validator');
 const commentController = require('./controller/comment.controller');
 const resalesController = require('./controller/resales.controller');
+const ApiError = require('./exceptions/api-error');
 
 const PORT = process.env.PORT || 3001;
 const app = express();
 app.use(cookieParser())
-const whiteList = ['http:/localhost:3000']
 const corsOptions = {
     credentials: true,
     optionsSuccessStatus: 200,

@@ -66,12 +66,14 @@ class UserService {
 
     async refresh(refreshToken) {
         if (!refreshToken) {
-            throw ApiError.UnauthorizedError();
+            // throw ApiError.UnauthorizedError();
+            return {message: 'Не пришел токен'}
         }
         const userData = tokenService.validateRefreshToken(refreshToken).id;
         const tokenFromDB = await tokenService.findToken(refreshToken);
-        if (!tokenFromDB || !tokenFromDB) {
-            throw ApiError.UnauthorizedError();
+        if (!tokenFromDB) {
+            // throw ApiError.UnauthorizedError();
+            return {message: 'не нашелся токен в дб'}
         }
         const user = await db.query(`SELECT * FROM users_list WHERE user_id=${userData}`)
         const { login, name, email, is_activated, user_image_path, status } = user.rows[0];

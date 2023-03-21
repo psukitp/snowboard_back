@@ -19,4 +19,8 @@ module.exports = class ApiError extends Error {
     static LoginExist(){
         return new ApiError(406, 'Пользователь с таким логином уже существует')
     }
+
+    static NotAllowed(){
+        return new ApiError(403, 'Кажется, эти данные недоступны тебе')
+    }
 }

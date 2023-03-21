@@ -10,7 +10,7 @@ class CommentController {
             const dd = String(today.getDate());
             const mm = String(today.getMonth() + 1);
             const yyyy = today.getFullYear();
-            today = dd + '.' + (mm.length < 2 ? '0'+mm : mm) + '.' + yyyy;
+            today = dd + '.' + (mm.length < 2 ? '0' + mm : mm) + '.' + yyyy;
             const newComment = await db.query(`INSERT INTO event_comment (creator_id, comment_date, comment_text) values ($1, $2, $3)`, [creator_id, today, comment_text]);
             const lastValue = await db.query(`SELECT * FROM event_comment WHERE event_comment_id = (SELECT max(event_comment_id) FROM event_comment)`)
             const newCommentId = lastValue.rows[0].event_comment_id;
@@ -25,7 +25,7 @@ class CommentController {
     async getComments(req, res) {
         try {
             const event_id = req.params.event_id;
-            const allCommentsToEvent = await db.query(`SELECT event_id, comment_id, creator_id, comment_date,comment_text, user_id, name, s_name FROM
+            const allCommentsToEvent = await db.query(`SELECT event_id, comment_id, creator_id, comment_date,comment_text, user_id, login, user_image_path FROM
         (SELECT * FROM event_comment_con t1 
         INNER JOIN event_comment t2 ON t1.comment_id = t2.event_comment_id
         INNER JOIN users_list t3 ON t2.creator_id = t3.user_id) AS newtable
