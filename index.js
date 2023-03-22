@@ -51,6 +51,7 @@ app.get('/events', eventConroller.getEvents)
 app.get('/events/:id', eventConroller.getOneEvent)
 app.post('/events/update/:id', eventConroller.updateEvent)
 app.get('/events-statistic', eventConroller.getDateStatisticEvent)
+app.get('/events/delete/:id', eventConroller.deleteEvent)
 
 
 //comments

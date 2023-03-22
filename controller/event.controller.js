@@ -85,7 +85,14 @@ class EventController {
     }
 
     async deleteEvent(req, res) {
-
+        try {
+            const id = req.params.id;
+            await db.query(`DELETE FROM event WHERE event_id=${id}`);
+            const events = await db.query(`SELECT * FROM event`);
+            res.send(events.rows);
+        } catch (e) {
+            console.log(e)
+        }
     }
 }
 
