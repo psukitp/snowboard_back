@@ -64,13 +64,13 @@ class UserService {
         return token;
     }
 
-    async refresh(refreshToken) {
-        if (!refreshToken) {
+    async refresh(token) {
+        if (!token) {
             throw ApiError.UnauthorizedError();
         }
-        const userData = tokenService.validateRefreshToken(refreshToken).id;
-        const tokenFromDB = await tokenService.findToken(refreshToken);
-        if (!tokenFromDB || !tokenFromDB) {
+        const userData = tokenService.validateAccessToken(token).id;
+        const tokenFromDB = await tokenService.findToken(token);
+        if (!tokenFromDB) {
             throw ApiError.UnauthorizedError();
         }
         const user = await db.query(`SELECT * FROM users_list WHERE user_id=${userData}`)

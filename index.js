@@ -39,7 +39,7 @@ app.post('/registration',
 app.post('/login', userController.login)
 app.post('/logout', userController.logout)
 app.get('/activate/:link', userController.activate)
-app.get('/refresh', userController.refresh)
+app.post('/refresh', userController.refresh)
 app.get('/users', userController.getUsers)
 app.post('/users/:id', userController.updateUser)
 app.post('/users/new-photo/:id', userController.updateUserPhoto)
