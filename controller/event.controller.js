@@ -21,7 +21,7 @@ class EventController {
 
                 filePathToGive = "/event_image/" + String(newId) + "." + fileType;
             } else {
-                filePathToGive = "/event_image/standard.jpeg"
+                filePathToGive = "/event_image/standard.png"
             }
 
             await db.query(`UPDATE event SET event_image_path=$1 WHERE event_id=$2`, [String(filePathToGive), newId])

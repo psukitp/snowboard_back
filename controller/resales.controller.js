@@ -37,7 +37,7 @@ class ResalesController {
 
                 filePathToGive = "/ad_image/" + String(newId) + "." + fileType;
             } else {
-                filePathToGive = "/ad_image/standard.jpeg"
+                filePathToGive = "/ad_image/standard.png"
             }
 
             await db.query(`UPDATE ad_post SET ad_image_path=$1 WHERE ad_post_id=$2`, [String(filePathToGive), newId])

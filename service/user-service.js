@@ -77,7 +77,7 @@ class UserService {
         const { login, name, email, is_activated, user_image_path, status } = user.rows[0];
         const userDto = new UserDto(login, name, email, userData, is_activated, user_image_path, status);
         const tokens = tokenService.generateTokens({ ...userDto });
-        await tokenService.removeToken(refreshToken);
+        await tokenService.removeToken(token);
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
         return {
             ...tokens,
