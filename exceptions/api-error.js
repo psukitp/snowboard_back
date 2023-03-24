@@ -19,4 +19,8 @@ module.exports = class ApiError extends Error {
     static LoginExist(){
         return new ApiError(406, 'Пользователь с таким логином уже существует')
     }
+
+    static EmailExist(){
+        return new ApiError(406, 'Пользователь с такой почтой уже существует')
+    }
 }

@@ -6,27 +6,44 @@ const mailService = require('./mail-service');
 const tokenService = require('./token-service');
 const UserDto = require('../dtos/user-dto');
 const ApiError = require('../exceptions/api-error');
-const { UnauthorizedError } = require("../exceptions/api-error");
+const { UnauthorizedError, LoginExist } = require("../exceptions/api-error");
 
 class UserService {
     async registration(login, name, email, password) {
-        const hashPassword = await bcrypt.hash(password, 3)
-        const activationLink = uuid.v4()
+        try {
+            const checkLogin = await db.query(`SELECT * FROM users_list WHERE login='${login}'`)
+            const checkEmail = await db.query(`SELECT * FROM users_list WHERE email='${email}'`)
+            if (checkLogin.rowCount > 0) {
+                throw ApiError.LoginExist()
+            }
+            if (checkEmail.rowCount > 0) {
+                throw ApiError.EmailExist()
+            }
+            const hashPassword = await bcrypt.hash(password, 3)
+            const activationLink = uuid.v4()
+            const basePhoto = "/user_image/standard.png"
 
 
-        const user = await db.query(`INSERT INTO users_list (name, email, user_hash_password, activation_link, login) values ($1, $2, $3, $4, $5) RETURNING *`, [name, email, hashPassword, activationLink, login])
-        // await mailService.senActivationMail(email, `${process.env.API_URL}/activate/${activationLink}`);
+            const user = await db.query(`INSERT INTO users_list (name, email, user_hash_password, activation_link, login, user_image_path) values ($1, $2, $3, $4, $5, $6) RETURNING *`, [name, email, hashPassword, activationLink, login, basePhoto])
+            // await mailService.senActivationMail(email, `${process.env.API_URL}/activate/${activationLink}`);
 
-        const lastValue = await db.query(`SELECT * FROM users_list WHERE user_id = (SELECT max(user_id) FROM users_list)`)
-        const newId = lastValue.rows[0].user_id;
-        const isActivated = lastValue.rows[0].is_activated;
-        const userDto = new UserDto(login, name, email, newId, isActivated)
+            const lastValue = await db.query(`SELECT * FROM users_list WHERE user_id = (SELECT max(user_id) FROM users_list)`)
+            const newId = lastValue.rows[0].user_id;
+            const isActivated = lastValue.rows[0].is_activated;
+            const user_image_path = lastValue.rows[0].user_image_path;
+            const userDto = new UserDto(login, name, email, newId, isActivated, user_image_path)
 
-        const tokens = tokenService.generateTokens({ ...userDto });
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
-        return {
-            ...tokens,
-            user: userDto
+            const tokens = tokenService.generateTokens({ ...userDto });
+            await tokenService.saveToken(userDto.id, tokens.refreshToken);
+            return {
+                ...tokens,
+                user: userDto
+            }
+        } catch (e) {
+            return ({
+                code: e.status,
+                message: e.message
+            })
         }
     }
 
@@ -41,21 +58,30 @@ class UserService {
 
 
     async login(emailin, password) {
-        const user = await db.query(`SELECT * FROM users_list WHERE email='${emailin}'`)
-        if (!user) {
-            throw ApiError.BadRequest('Пользователь с таким email не найден')
-        }
-        const { login, name, user_hash_password, email, user_id, is_activated, user_image_path, status } = user.rows[0]
-        const isPassEquals = await bcrypt.compare(password, user_hash_password);
-        if (!isPassEquals) {
-            throw ApiError.BadRequest('Неверный пароль')
-        }
-        const userDto = new UserDto(login, name, email, user_id, is_activated, user_image_path, status);
-        const tokens = tokenService.generateTokens({ ...userDto });
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
-        return {
-            ...tokens,
-            user: userDto
+        try {
+            const user = await db.query(`SELECT * FROM users_list WHERE email='${emailin}'`)
+            console.log(user.rows[0])
+            if (user.rowCount < 1) {
+                throw ApiError.BadRequest('Пользователь с таким email не найден')
+            }
+            const { login, name, user_hash_password, email, user_id, is_activated, user_image_path, status } = user.rows[0]
+            const isPassEquals = await bcrypt.compare(password, user_hash_password);
+            if (!isPassEquals) {
+                throw ApiError.BadRequest('Неверный пароль')
+            }
+            const userDto = new UserDto(login, name, email, user_id, is_activated, user_image_path, status);
+            const tokens = tokenService.generateTokens({ ...userDto });
+            await tokenService.saveToken(userDto.id, tokens.refreshToken);
+            return {
+                ...tokens,
+                user: userDto
+            }
+        } catch (e) {
+            console.log(e)
+            return ({
+                code: e.status,
+                message: e.message
+            })
         }
     }
 
@@ -65,6 +91,7 @@ class UserService {
     }
 
     async refresh(token) {
+        console.log(token)
         if (!token) {
             throw ApiError.UnauthorizedError();
         }
