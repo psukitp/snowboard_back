@@ -8,7 +8,7 @@ class UserController {
         try {
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                return next(ApiError.BadRequest('Ошибка валидации', errors.array()))
+                throw ApiError.BadRequest('Почта должна быть в формате ***@***.**, а пароль длиной не менее 5 символов')
             }
             const { login, name, email, password } = req.body;
 
@@ -17,7 +17,10 @@ class UserController {
 
             return res.json(userData)
         } catch (e) {
-            console.log(e)
+            res.json({
+                code: e.status,
+                message: e.message
+            })
         }
     }
 

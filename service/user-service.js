@@ -60,7 +60,6 @@ class UserService {
     async login(emailin, password) {
         try {
             const user = await db.query(`SELECT * FROM users_list WHERE email='${emailin}'`)
-            console.log(user.rows[0])
             if (user.rowCount < 1) {
                 throw ApiError.BadRequest('Пользователь с таким email не найден')
             }
@@ -91,7 +90,6 @@ class UserService {
     }
 
     async refresh(token) {
-        console.log(token)
         if (!token) {
             throw ApiError.UnauthorizedError();
         }
