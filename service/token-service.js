@@ -4,7 +4,7 @@ require("dotenv").config();
 
 class TokenService {
     generateTokens(payload) {
-        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: '30d' })
+        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: '15m' })
         const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' })
         return {
             accessToken,
@@ -26,18 +26,22 @@ class TokenService {
             const userData = jwt.verify(token, process.env.JWT_REFRESH_SECRET)
             return userData
         } catch (e) {
-            console.log(e)
+            // console.log(e)
             return null
         }
     }
 
     async saveToken(userId, refreshToken) {
         const tokenData = await db.query(`SELECT * FROM token_model WHERE user_id = ${userId}`);
-        if (tokenData) {
-            tokenData.token = refreshToken;
+        console.log(tokenData.rows[0])
+        if (tokenData.rowCount > 0) {
+            const updateToken = await db.query(`UPDATE token_model SET token='${refreshToken}' WHERE user_id=${userId}`)
+            return updateToken
+
+        } else {
+            const token = await db.query(`INSERT INTO token_model (user_id, token) values($1, $2)`, [userId, refreshToken])
+            return token;
         }
-        const token = await db.query(`INSERT INTO token_model (user_id, token) values($1, $2)`, [userId, refreshToken])
-        return token;
     }
 
     async removeToken(refreshToken) {
@@ -47,6 +51,7 @@ class TokenService {
 
     async findToken(refreshToken) {
         const findedToken = await db.query(`SELECT * FROM token_model WHERE token='${refreshToken}'`)
+        console.log(refreshToken)
         return findedToken;
     }
 }

@@ -90,23 +90,30 @@ class UserService {
     }
 
     async refresh(token) {
-        if (!token) {
-            throw ApiError.UnauthorizedError();
-        }
-        const userData = tokenService.validateAccessToken(token).id;
-        const tokenFromDB = await tokenService.findToken(token);
-        if (!tokenFromDB) {
-            throw ApiError.UnauthorizedError();
-        }
-        const user = await db.query(`SELECT * FROM users_list WHERE user_id=${userData}`)
-        const { login, name, email, is_activated, user_image_path, status } = user.rows[0];
-        const userDto = new UserDto(login, name, email, userData, is_activated, user_image_path, status);
-        const tokens = tokenService.generateTokens({ ...userDto });
-        await tokenService.removeToken(token);
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
-        return {
-            ...tokens,
-            user: userDto
+        try {
+            if (!token) {
+                throw ApiError.UnauthorizedError();
+            }
+            const userData = tokenService.validateRefreshToken(token);
+            const tokenFromDB = await tokenService.findToken(token);
+            if (tokenFromDB.rowCount < 1 || !userData) {
+                throw ApiError.UnauthorizedError();
+            }
+            const user = await db.query(`SELECT * FROM users_list WHERE user_id=${userData.id}`)
+            const { login, name, email, is_activated, user_image_path, status } = user.rows[0];
+            const userDto = new UserDto(login, name, email, userData.id, is_activated, user_image_path, status);
+            const tokens = tokenService.generateTokens({ ...userDto });
+
+            await tokenService.saveToken(userDto.id, tokens.refreshToken);
+            return {
+                ...tokens,
+                user: userDto
+            }
+        } catch (e) {
+            return {
+                code: e.status,
+                message: e.message
+            }
         }
     }
 

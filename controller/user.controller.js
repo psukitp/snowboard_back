@@ -13,10 +13,11 @@ class UserController {
             const { login, name, email, password } = req.body;
 
             const userData = await userService.registration(login, name, email, password);
-            res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
+
 
             return res.json(userData)
         } catch (e) {
+            res.status(e.status)
             res.json({
                 code: e.status,
                 message: e.message
@@ -28,8 +29,6 @@ class UserController {
         try {
             const { email, password } = req.body;
             const userData = await userService.login(email, password);
-
-            res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
             return res.json(userData)
         } catch (e) {
             return res.json(e)
@@ -38,10 +37,9 @@ class UserController {
 
     async logout(req, res, next) {
         try {
-            const { refreshToken } = req.cookies;
-            const token = await userService.logout(refreshToken);
-            res.clearCookie('refreshToken');
-            return res.json(token);
+            const { refreshToken } = req.body;
+            await userService.logout(refreshToken);
+            return res.json('Успешно');
         } catch {
             console.log(e);
         }
@@ -61,6 +59,9 @@ class UserController {
         try {
             const { token } = req.body;
             const userData = await userService.refresh(token);
+            if (userData.code === 401) {
+                res.status(401)
+            }
             res.send(userData);
         } catch (e) {
             console.log(e);
@@ -72,7 +73,7 @@ class UserController {
             const { name, login, status } = req.body;
             const id = req.params.id;
             const newUser = await userService.updateUser(id, name, login, status);
-            res.status(newUser.code)
+
             res.send(newUser);
         } catch (e) {
             console.log(e);
