@@ -33,7 +33,6 @@ class TokenService {
 
     async saveToken(userId, refreshToken) {
         const tokenData = await db.query(`SELECT * FROM token_model WHERE user_id = ${userId}`);
-        console.log(tokenData.rows[0])
         if (tokenData.rowCount > 0) {
             const updateToken = await db.query(`UPDATE token_model SET token='${refreshToken}' WHERE user_id=${userId}`)
             return updateToken
@@ -51,7 +50,6 @@ class TokenService {
 
     async findToken(refreshToken) {
         const findedToken = await db.query(`SELECT * FROM token_model WHERE token='${refreshToken}'`)
-        console.log(refreshToken)
         return findedToken;
     }
 }

@@ -91,9 +91,7 @@ let io = iosocket(server, {
 io.on('connection', (socket) => {
     socket.on('join', async ({ user, creator }) => {
         try {
-            console.log('подключился')
-            console.log('владелец меро', creator)
-            console.log('покдлючающийся', user)
+
             await socket.join(creator);
             const chat = await db.query(`SELECT chat_id FROM chat WHERE creator_id = ${creator} and user_id=${user}`)
             if (chat.rowCount > 0) {
@@ -121,13 +119,9 @@ io.on('connection', (socket) => {
 
     socket.on('sendMessage', async ({ message, user, creator, recipient }) => {
         try {
-            console.log('user', user, 'creator', creator, 'recipient', recipient)
-            console.log('от', user, 'пришло', message)
             const chat = await db.query(`SELECT chat_id FROM chat WHERE creator_id=${creator} and user_id =${recipient}`);
-            console.log(chat.rows[0])
             const newMessage = await db.query(`INSERT INTO message (sender_id, message) values ($1, $2)`, [user, message]);
             const lastValue = await db.query(`SELECT * FROM message WHERE message_id = (SELECT max(message_id) FROM message)`)
-            console.log(lastValue.rows[0])
             await db.query(`INSERT INTO chat_message_con (chat_id, message_id) values ($1, $2)`, [chat.rows[0].chat_id, lastValue.rows[0].message_id])
             io.to(creator).emit('message', {
                 data: {
@@ -135,7 +129,6 @@ io.on('connection', (socket) => {
                     message: message
                 }
             })
-            console.log('отправил', message);
         } catch (e) {
             console.log(e)
         }
@@ -144,6 +137,5 @@ io.on('connection', (socket) => {
 
     io.on('disconnect', () => {
         socket.disconnect(0);
-        console.log('disconnect')
     })
 })
