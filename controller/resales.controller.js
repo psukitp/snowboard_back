@@ -151,6 +151,43 @@ class ResalesController {
     async deleteResale(req, res) {
 
     }
+
+    async getMyResales(req, res) {
+        try {
+            const id = req.params.id;
+
+            let myResales = await db.query(`SELECT ad_post_id, creator_id, post_name, post_text, ad_image_path, price, ad_product_type, ad_telephone, product_type_name FROM
+            (SELECT * FROM ad_post t1 
+            INNER JOIN product_type t2 ON t1.ad_product_type = t2.product_type_id ) AS newtable WHERE creator_id=${id}`)
+
+            let boardProp = await db.query(`SELECT * FROM board_property`);
+            let bindingProp = await db.query(`SELECT * FROM binding_property`);
+            let clothesProp = await db.query(`SELECT * FROM clothes_property`);
+            let shoesProp = await db.query(`SELECT * FROM shoes_property`);
+
+            for (let i = 0; i < myResales.rowCount; i++) {
+                let res = boardProp.rows.find(({ ad_post_id }) => ad_post_id === myResales.rows[i].ad_post_id);
+                if (res !== undefined) {
+                    Object.assign(myResales.rows[i], res)
+                }
+                res = bindingProp.rows.find(({ ad_post_id }) => ad_post_id === myResales.rows[i].ad_post_id);
+                if (res !== undefined) {
+                    Object.assign(myResales.rows[i], res)
+                }
+                res = clothesProp.rows.find(({ ad_post_id }) => ad_post_id === myResales.rows[i].ad_post_id);
+                if (res !== undefined) {
+                    Object.assign(myResales.rows[i], res)
+                }
+                res = shoesProp.rows.find(({ ad_post_id }) => ad_post_id === myResales.rows[i].ad_post_id);
+                if (res !== undefined) {
+                    Object.assign(myResales.rows[i], res)
+                }
+            }
+            res.send(myResales.rows);
+        } catch (e) {
+            console.log(e)
+        }
+    }
 }
 
 module.exports = new ResalesController();

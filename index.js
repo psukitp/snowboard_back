@@ -1,4 +1,6 @@
 require('dotenv').config
+const db = require('./db')
+
 
 const express = require('express');
 const cors = require('cors');
@@ -31,6 +33,7 @@ app.use(bodyParser.json({
 app.use(errorMiddleware)
 
 
+
 //users
 app.post('/registration',
     body('email').isEmail(),
@@ -52,6 +55,7 @@ app.get('/events/:id', eventConroller.getOneEvent)
 app.post('/events/update/:id', eventConroller.updateEvent)
 app.get('/events-statistic', eventConroller.getDateStatisticEvent)
 app.get('/events/delete/:id', eventConroller.deleteEvent)
+app.get('/my-events/:id', eventConroller.getMyEvents)
 
 
 //comments
@@ -67,5 +71,79 @@ app.post('/new-resale', resalesController.createResale)
 app.get('/products', resalesController.getProductTypes)
 app.get('/resale/:id', resalesController.getOneResale)
 app.post('/resale/update/:id', resalesController.updateResale)
+app.get('/my-resales/:id', resalesController.getMyResales)
 
-app.listen(PORT, () => console.log('server started on port ' + PORT))
+
+
+let server = app.listen(PORT, () => console.log('server started on port ' + PORT))
+
+//messages
+const messageController = require('./controller/message.controller');
+app.post('/get-senders', messageController.getSenders)
+
+
+var iosocket = require('socket.io');
+let io = iosocket(server, {
+    cors: {
+        origin: "*"
+    }
+});
+io.on('connection', (socket) => {
+    socket.on('join', async ({ user, creator }) => {
+        try {
+            console.log('подключился')
+            console.log('владелец меро', creator)
+            console.log('покдлючающийся', user)
+            await socket.join(creator);
+            const chat = await db.query(`SELECT chat_id FROM chat WHERE creator_id = ${creator} and user_id=${user}`)
+            if (chat.rowCount > 0) {
+                const history = await db.query(`SELECT message_id FROM chat_message_con WHERE chat_id = ${chat.rows[0].chat_id}`);
+                if (history.rowCount > 0) {
+                    for (let i = 0; i < history.rowCount; i++) {
+                        const messageToSend = await db.query(`SELECT * FROM message WHERE message_id = ${history.rows[i].message_id}`);
+                        io.to(creator).emit('message', {
+                            data: {
+                                id: messageToSend.rows[0].message_id,
+                                user: messageToSend.rows[0].sender_id,
+                                message: messageToSend.rows[0].message
+                            }
+                        })
+                    }
+                }
+            } else {
+                await db.query(`INSERT into chat (creator_id, user_id) values ($1, $2)`, [creator, user])
+                const newHistory = await db.query(``)
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    })
+
+    socket.on('sendMessage', async ({ message, user, creator, recipient }) => {
+        try {
+            console.log('user', user, 'creator', creator, 'recipient', recipient)
+            console.log('от', user, 'пришло', message)
+            const chat = await db.query(`SELECT chat_id FROM chat WHERE creator_id=${creator} and user_id =${recipient}`);
+            console.log(chat.rows[0])
+            const newMessage = await db.query(`INSERT INTO message (sender_id, message) values ($1, $2)`, [user, message]);
+            const lastValue = await db.query(`SELECT * FROM message WHERE message_id = (SELECT max(message_id) FROM message)`)
+            console.log(lastValue.rows[0])
+            await db.query(`INSERT INTO chat_message_con (chat_id, message_id) values ($1, $2)`, [chat.rows[0].chat_id, lastValue.rows[0].message_id])
+            io.to(creator).emit('message', {
+                data: {
+                    user: user,
+                    message: message
+                }
+            })
+            console.log('отправил', message);
+        } catch (e) {
+            console.log(e)
+        }
+    })
+
+
+    io.on('disconnect', () => {
+        socket.disconnect(0);
+        console.log('disconnect')
+    })
+})
