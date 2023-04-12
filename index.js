@@ -80,7 +80,7 @@ let server = app.listen(PORT, () => console.log('server started on port ' + PORT
 //messages
 const messageController = require('./controller/message.controller');
 app.post('/get-senders', messageController.getSenders)
-
+app.post('/get-history', messageController.getHistory)
 
 var iosocket = require('socket.io');
 let io = iosocket(server, {
@@ -91,27 +91,7 @@ let io = iosocket(server, {
 io.on('connection', (socket) => {
     socket.on('join', async ({ user, creator }) => {
         try {
-
             await socket.join(creator);
-            const chat = await db.query(`SELECT chat_id FROM chat WHERE creator_id = ${creator} and user_id=${user}`)
-            if (chat.rowCount > 0) {
-                const history = await db.query(`SELECT message_id FROM chat_message_con WHERE chat_id = ${chat.rows[0].chat_id}`);
-                if (history.rowCount > 0) {
-                    for (let i = 0; i < history.rowCount; i++) {
-                        const messageToSend = await db.query(`SELECT * FROM message WHERE message_id = ${history.rows[i].message_id}`);
-                        io.to(creator).emit('message', {
-                            data: {
-                                id: messageToSend.rows[0].message_id,
-                                user: messageToSend.rows[0].sender_id,
-                                message: messageToSend.rows[0].message
-                            }
-                        })
-                    }
-                }
-            } else {
-                await db.query(`INSERT into chat (creator_id, user_id) values ($1, $2)`, [creator, user])
-                const newHistory = await db.query(``)
-            }
         } catch (e) {
             console.log(e)
         }
