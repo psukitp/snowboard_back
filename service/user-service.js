@@ -7,6 +7,7 @@ const tokenService = require('./token-service');
 const UserDto = require('../dtos/user-dto');
 const ApiError = require('../exceptions/api-error');
 const { UnauthorizedError, LoginExist } = require("../exceptions/api-error");
+const jwt_decode = require("jwt-decode");
 
 class UserService {
     async registration(login, name, email, password) {
@@ -36,7 +37,7 @@ class UserService {
             const tokens = tokenService.generateTokens({ ...userDto });
             await tokenService.saveToken(userDto.id, tokens.refreshToken);
             return {
-                ...tokens,
+                accessToken: tokens.accessToken,
                 user: userDto
             }
         } catch (e) {
@@ -72,7 +73,7 @@ class UserService {
             const tokens = tokenService.generateTokens({ ...userDto });
             await tokenService.saveToken(userDto.id, tokens.refreshToken);
             return {
-                ...tokens,
+                accessToken: tokens.accessToken,
                 user: userDto
             }
         } catch (e) {
@@ -94,20 +95,34 @@ class UserService {
             if (!token) {
                 throw ApiError.UnauthorizedError();
             }
-            const userData = tokenService.validateRefreshToken(token);
-            const tokenFromDB = await tokenService.findToken(token);
-            if (tokenFromDB.rowCount < 1 || !userData) {
+            const userDataAccess = tokenService.validateAccessToken(token);
+            if (userDataAccess !== null) {
+                const user = await db.query(`SELECT * FROM users_list WHERE user_id=${userDataAccess.id}`)
+                const { login, name, email, is_activated, user_image_path, status } = user.rows[0];
+                const userDto = new UserDto(login, name, email, userDataAccess.id, is_activated, user_image_path, status);
+                return {
+                    accessToken: token,
+                    user: userDto
+                }
+            }
+            const decode = jwt_decode(token)
+            const dbToken = await db.query(`SELECT token FROM token_model WHERE user_id = ${decode.id}`)
+            if (dbToken.rowCount < 1) {
                 throw ApiError.UnauthorizedError();
             }
-            const user = await db.query(`SELECT * FROM users_list WHERE user_id=${userData.id}`)
-            const { login, name, email, is_activated, user_image_path, status } = user.rows[0];
-            const userDto = new UserDto(login, name, email, userData.id, is_activated, user_image_path, status);
-            const tokens = tokenService.generateTokens({ ...userDto });
-
-            await tokenService.saveToken(userDto.id, tokens.refreshToken);
-            return {
-                ...tokens,
-                user: userDto
+            const userDataRefresh = tokenService.validateRefreshToken(dbToken.rows[0].token)
+            if (userDataRefresh !== null) {
+                const user = await db.query(`SELECT * FROM users_list WHERE user_id=${userDataRefresh.id}`)
+                const { login, name, email, is_activated, user_image_path, status } = user.rows[0];
+                const userDto = new UserDto(login, name, email, userDataRefresh.id, is_activated, user_image_path, status);
+                const tokens = tokenService.generateTokens({ ...userDto });
+                await tokenService.saveToken(userDto.id, tokens.refreshToken);
+                return {
+                    accessToken: tokens.accessToken,
+                    user: userDto
+                }
+            } else {
+                throw ApiError.UnauthorizedError();
             }
         } catch (e) {
             return {

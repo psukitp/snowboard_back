@@ -14,7 +14,6 @@ class UserController {
 
             const userData = await userService.registration(login, name, email, password);
 
-
             return res.json(userData)
         } catch (e) {
             res.status(e.status)
@@ -29,6 +28,9 @@ class UserController {
         try {
             const { email, password } = req.body;
             const userData = await userService.login(email, password);
+            if (userData.code) {
+                res.status(userData.code)
+            }
             return res.json(userData)
         } catch (e) {
             return res.json(e)
@@ -57,10 +59,11 @@ class UserController {
 
     async refresh(req, res, next) {
         try {
-            const { token } = req.body;
+            const token = await req.get("Authorization");
+            // console.log(req.headers)
             const userData = await userService.refresh(token);
-            if (userData.code === 401) {
-                res.status(401)
+            if (userData.code) {
+                res.status(userData.code)
             }
             res.send(userData);
         } catch (e) {
